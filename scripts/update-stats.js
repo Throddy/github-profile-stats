@@ -164,6 +164,40 @@ async function fetchTotalContributions(years) {
 }
 
 /**
+ * Fetch the user's actual all-time commit count.
+ * Includes private commits accessible to GH_TOKEN.
+ *
+ * @returns {Promise<number>} Total all-time commits.
+ */
+async function fetchAllTimeCommits() {
+  const query = encodeURIComponent(`author:${USERNAME}`);
+  const url = `${REST_BASE}/search/commits?q=${query}&per_page=1`;
+
+  const res = await fetch(url, {
+    headers: {
+      ...restHeaders,
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(
+      `Failed to fetch all-time commits: ${res.status} ${res.statusText}\n${body}`,
+    );
+  }
+
+  const json = await res.json();
+
+  if (typeof json.total_count !== "number") {
+    throw new Error("GitHub Commit Search did not return total_count");
+  }
+
+  return json.total_count;
+}
+
+/**
  * Fetch contributor stats for a repo, retrying on 202 (computing) responses.
  * Returns the total lines added + deleted for USERNAME.
  * @param {string} repo "owner/name"
@@ -309,9 +343,16 @@ async function main() {
   console.log(`Stars: ${totalStars}, Forks: ${totalForks}`);
 
   // Fetch all-time contributions.
+  // Fetch all-time contributions.
   console.log("Fetching all-time contributions...");
-  const totalCommits = await fetchTotalContributions(contributionYears);
-  console.log(`All-time contributions: ${totalCommits}`);
+  const totalContributions =
+    await fetchTotalContributions(contributionYears);
+  console.log(`All-time contributions: ${totalContributions}`);
+
+  // Fetch actual all-time commits.
+  console.log("Fetching all-time commits...");
+  const totalCommits = await fetchAllTimeCommits();
+  console.log(`All-time commits: ${totalCommits}`);
 
   // Compute per-repo stats (lines changed + views).
   let totalLinesChanged = 0;
@@ -338,6 +379,7 @@ async function main() {
     totalStars,
     totalForks,
     totalCommits,
+    totalContributions,
     contributedTo: repoList.length,
     linesChanged: totalLinesChanged,
     repoViews: totalViews,
