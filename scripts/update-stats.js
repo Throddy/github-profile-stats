@@ -198,6 +198,40 @@ async function fetchAllTimeCommits() {
 }
 
 /**
+ * Fetch the user's actual all-time pull request count.
+ * Includes private pull requests accessible to GH_TOKEN.
+ *
+ * @returns {Promise<number>} Total all-time pull requests.
+ */
+async function fetchAllTimePullRequests() {
+  const query = encodeURIComponent(`author:${USERNAME} type:pr`);
+  const url = `${REST_BASE}/search/issues?q=${query}&per_page=1`;
+
+  const res = await fetch(url, {
+    headers: {
+      ...restHeaders,
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(
+      `Failed to fetch all-time pull requests: ${res.status} ${res.statusText}\n${body}`,
+    );
+  }
+
+  const json = await res.json();
+
+  if (typeof json.total_count !== "number") {
+    throw new Error("GitHub Pull Request Search did not return total_count");
+  }
+
+  return json.total_count;
+}
+
+/**
  * Fetch contributor stats for a repo, retrying on 202 (computing) responses.
  * Returns the total lines added + deleted for USERNAME.
  * @param {string} repo "owner/name"
@@ -345,14 +379,17 @@ async function main() {
   // Fetch all-time contributions.
   // Fetch all-time contributions.
   console.log("Fetching all-time contributions...");
-  const totalContributions =
-    await fetchTotalContributions(contributionYears);
+  const totalContributions = await fetchTotalContributions(contributionYears);
   console.log(`All-time contributions: ${totalContributions}`);
 
   // Fetch actual all-time commits.
   console.log("Fetching all-time commits...");
   const totalCommits = await fetchAllTimeCommits();
   console.log(`All-time commits: ${totalCommits}`);
+
+  console.log("Fetching all-time pull requests...");
+  const totalPullRequests = await fetchAllTimePullRequests();
+  console.log(`All-time pull requests: ${totalPullRequests}`);
 
   // Compute per-repo stats (lines changed + views).
   let totalLinesChanged = 0;
@@ -379,6 +416,7 @@ async function main() {
     totalStars,
     totalForks,
     totalCommits,
+    totalPullRequests,
     totalContributions,
     contributedTo: repoList.length,
     linesChanged: totalLinesChanged,

@@ -290,8 +290,15 @@ const totalContributionsFetcher = async (username, years) => {
  */
 const fetchGistStats = async (username) => {
   const gistId = process.env.GIST_ID;
+
   if (!gistId) {
-    return { linesChanged: 0, repoViews: 0 };
+    return {
+      totalCommits: 0,
+      totalPullRequests: 0,
+      linesChanged: 0,
+      repoViews: 0,
+      contributedTo: 0,
+    };
   }
 
   try {
@@ -299,14 +306,26 @@ const fetchGistStats = async (username) => {
       method: "get",
       url: `https://gist.githubusercontent.com/${username}/${gistId}/raw/github-stats.json`,
     });
+
     const data = typeof res.data === "string" ? JSON.parse(res.data) : res.data;
+
     return {
+      totalCommits: data.totalCommits || 0,
+      totalPullRequests: data.totalPullRequests || 0,
       linesChanged: data.linesChanged || 0,
       repoViews: data.repoViews || 0,
+      contributedTo: data.contributedTo || 0,
     };
   } catch (err) {
     logger.log("Failed to fetch gist stats:", err);
-    return { linesChanged: 0, repoViews: 0 };
+
+    return {
+      totalCommits: 0,
+      totalPullRequests: 0,
+      linesChanged: 0,
+      repoViews: 0,
+      contributedTo: 0,
+    };
   }
 };
 
@@ -319,6 +338,7 @@ const fetchGistStats = async (username) => {
  *   totalStars: number,
  *   totalForks: number,
  *   totalCommits: number,
+ *   totalPullRequests: number,
  *   currentStreak: number,
  *   currentStreakStart: string,
  *   currentStreakEnd: string,
@@ -345,6 +365,7 @@ const fetchOverview = async (username) => {
     totalStars: 0,
     totalForks: 0,
     totalCommits: 0,
+    totalPullRequests: 0,
     currentStreak: 0,
     currentStreakStart: "",
     currentStreakEnd: "",
@@ -356,7 +377,7 @@ const fetchOverview = async (username) => {
     contributedTo: 0,
   };
 
-  // Fetch GraphQL stats and gist stats in parallel.
+  // Fetch GraphQL stats and Gist-cached stats in parallel.
   const [graphqlRes, gistStats] = await Promise.all([
     overviewStatsFetcher(username),
     fetchGistStats(username),
@@ -365,18 +386,21 @@ const fetchOverview = async (username) => {
   // Catch GraphQL errors.
   if (graphqlRes.errors) {
     logger.error(graphqlRes.errors);
+
     if (graphqlRes.errors[0].type === "NOT_FOUND") {
       throw new CustomError(
         graphqlRes.errors[0].message || "Could not fetch user.",
         CustomError.USER_NOT_FOUND,
       );
     }
+
     if (graphqlRes.errors[0].message) {
       throw new CustomError(
         wrapTextMultiline(graphqlRes.errors[0].message, 90, 1)[0],
         graphqlRes.statusText,
       );
     }
+
     throw new CustomError(
       "Something went wrong while trying to retrieve the stats data using the GraphQL API.",
       CustomError.GRAPHQL_ERROR,
@@ -386,12 +410,11 @@ const fetchOverview = async (username) => {
   const { user, repos } = graphqlRes;
 
   overview.name = user.name || user.login;
-  overview.contributedTo = repos.size;
 
-  // Fetch all-time contributions and streaks using contribution years from the first query.
+  // Fetch contribution calendar only for streak calculations.
   const years = user.contributionsCollection.contributionYears;
   const contribStats = await totalContributionsFetcher(username, years);
-  overview.totalCommits = contribStats.totalContributions;
+
   overview.currentStreak = contribStats.currentStreak;
   overview.currentStreakStart = contribStats.currentStreakStart;
   overview.currentStreakEnd = contribStats.currentStreakEnd;
@@ -399,15 +422,18 @@ const fetchOverview = async (username) => {
   overview.longestStreakStart = contribStats.longestStreakStart;
   overview.longestStreakEnd = contribStats.longestStreakEnd;
 
-  // Sum stars and forks across all unique repos (owned + contributed to).
+  // Keep these for compatibility with existing code.
   for (const repo of repos.values()) {
     overview.totalStars += repo.stargazers.totalCount;
     overview.totalForks += repo.forkCount;
   }
 
-  // Gist-cached stats.
+  // All custom aggregate stats come from the Gist.
+  overview.totalCommits = gistStats.totalCommits;
+  overview.totalPullRequests = gistStats.totalPullRequests;
   overview.linesChanged = gistStats.linesChanged;
   overview.repoViews = gistStats.repoViews;
+  overview.contributedTo = gistStats.contributedTo;
 
   return overview;
 };

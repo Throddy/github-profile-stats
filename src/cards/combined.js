@@ -110,36 +110,32 @@ const renderCombinedCard = (data, options = {}) => {
   const streakColor = icon_color ? iconColor : STREAK_COLOR;
 
   // Stats rows.
+  // Stats rows.
   const statsData = [
     {
-      icon: statIcons.star,
-      label: "Stars",
-      value: formatNumber(overview.totalStars),
-    },
-    {
-      icon: statIcons.fork,
-      label: "Forks",
-      value: formatNumber(overview.totalForks),
-    },
-    {
       icon: statIcons.commits,
-      label: "All-time contributions",
+      label: "Total Commits",
       value: formatNumber(overview.totalCommits),
     },
     {
+      icon: statIcons.contribs,
+      label: "Pull Requests",
+      value: formatNumber(overview.totalPullRequests),
+    },
+    {
       icon: statIcons.plus,
-      label: "Lines of code changed",
+      label: "Lines of Code Changed",
       value: formatNumber(overview.linesChanged),
     },
     {
-      icon: statIcons.eye,
-      label: "Repository views (past two weeks)",
-      value: formatNumber(overview.repoViews),
+      icon: statIcons.contribs,
+      label: "Repositories Contributed To",
+      value: formatNumber(overview.contributedTo),
     },
     {
-      icon: statIcons.contribs,
-      label: "Repositories with contributions",
-      value: formatNumber(overview.contributedTo),
+      icon: statIcons.eye,
+      label: "Repository Views (past two weeks)",
+      value: formatNumber(overview.repoViews),
     },
   ];
 
@@ -370,7 +366,7 @@ const renderCombinedCard = (data, options = {}) => {
 
   card.setAccessibilityLabel({
     title: defaultTitle,
-    desc: `Stars: ${overview.totalStars}, Forks: ${overview.totalForks}, Contributions: ${overview.totalCommits}, Current streak: ${streak.currentStreak} days, Longest streak: ${streak.longestStreak} days`,
+    desc: `Total commits: ${overview.totalCommits}, Pull requests: ${overview.totalPullRequests}, Lines of code changed: ${overview.linesChanged}, Repositories contributed to: ${overview.contributedTo}, Repository views in the past two weeks: ${overview.repoViews}, Current streak: ${streak.currentStreak} days, Longest streak: ${streak.longestStreak} days`,
   });
 
   const cardSvg = card.render(`

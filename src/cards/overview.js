@@ -115,21 +115,19 @@ const getStyles = ({ textColor, iconColor, show_icons }) => {
  *
  * @param {object} stats The overview stats data.
  * @param {string} stats.name User's display name.
- * @param {number} stats.totalStars Total stars.
- * @param {number} stats.totalForks Total forks.
  * @param {number} stats.totalCommits Total all-time commits.
+ * @param {number} stats.totalPullRequests Total all-time pull requests.
  * @param {number} stats.linesChanged Lines of code changed.
  * @param {number} stats.repoViews Repository views (past two weeks).
- * @param {number} stats.contributedTo Repositories with contributions.
+ * @param {number} stats.contributedTo Repositories contributed to.
  * @param {object} options Card options.
  * @returns {string} The overview card SVG.
  */
 const renderOverviewCard = (stats, options = {}) => {
   const {
     name,
-    totalStars,
-    totalForks,
     totalCommits,
+    totalPullRequests,
     linesChanged,
     repoViews,
     contributedTo,
@@ -175,42 +173,37 @@ const renderOverviewCard = (stats, options = {}) => {
   });
 
   // Define the stat rows.
+  // Define the stat rows.
   const STATS = [
     {
-      icon: overviewIcons.star,
-      label: "Stars",
-      value: formatNumber(totalStars, number_format),
-      id: "stars",
-    },
-    {
-      icon: overviewIcons.fork,
-      label: "Forks",
-      value: formatNumber(totalForks, number_format),
-      id: "forks",
-    },
-    {
       icon: overviewIcons.commits,
-      label: "All-time contributions",
+      label: "Total Commits",
       value: formatNumber(totalCommits, number_format),
       id: "commits",
     },
     {
+      icon: overviewIcons.contribs,
+      label: "Pull Requests",
+      value: formatNumber(totalPullRequests, number_format),
+      id: "pull_requests",
+    },
+    {
       icon: overviewIcons.plus,
-      label: "Lines of code changed",
+      label: "Lines of Code Changed",
       value: formatNumber(linesChanged, number_format),
       id: "lines_changed",
     },
     {
-      icon: overviewIcons.eye,
-      label: "Repository views (past two weeks)",
-      value: formatNumber(repoViews, number_format),
-      id: "repo_views",
-    },
-    {
       icon: overviewIcons.contribs,
-      label: "Repositories with contributions",
+      label: "Repositories Contributed To",
       value: formatNumber(contributedTo, number_format),
       id: "contributed_to",
+    },
+    {
+      icon: overviewIcons.eye,
+      label: "Repository Views (past two weeks)",
+      value: formatNumber(repoViews, number_format),
+      id: "repo_views",
     },
   ];
 
