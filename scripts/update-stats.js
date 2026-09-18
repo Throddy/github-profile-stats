@@ -400,6 +400,7 @@ async function main() {
     console.log(`Processing repo ${i + 1}/${repoList.length}: ${repo}`);
 
     const lines = await fetchLinesChanged(repo);
+    console.log(`  Lines changed: ${lines.toLocaleString("en-US")}`);
     totalLinesChanged += lines;
     await sleep(100);
 
