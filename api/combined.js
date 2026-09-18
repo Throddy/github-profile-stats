@@ -39,6 +39,7 @@ const fetchCachedOverview = async (username) => {
     totalStars: data.totalStars || 0,
     totalForks: data.totalForks || 0,
     totalCommits: data.totalCommits || 0,
+    totalPullRequests: data.totalPullRequests || 0,
     linesChanged: data.linesChanged || 0,
     repoViews: data.repoViews || 0,
     contributedTo: data.contributedTo || 0,

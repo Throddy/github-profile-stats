@@ -110,7 +110,6 @@ const renderCombinedCard = (data, options = {}) => {
   const streakColor = icon_color ? iconColor : STREAK_COLOR;
 
   // Stats rows.
-  // Stats rows.
   const statsData = [
     {
       icon: statIcons.commits,
